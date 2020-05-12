@@ -13,37 +13,21 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 {
 	Properties 
 	{
-		_Shininess ("Shininess", Range (0.03, 1)) = 0.078125
-		
-		// Specular vs Metallic workflow
-		[HideInInspector] _WorkflowMode("WorkflowMode", Float) = 1.0
+		[MainTexture] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
+		[MainColor] _BaseMap("Base Map (RGB) Smoothness / Alpha (A)", 2D) = "white" {}
 
-		[MainColor][HideInInspector] _BaseColor("Color", Color) = (0.5,0.5,0.5,1)
-		[MainTexture][HideInInspector] _BaseMap("Albedo", 2D) = "white" {}
+		_Cutoff("Alpha Clipping", Range(0.0, 1.0)) = 0.5
 
-		[HideInInspector]_Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
+		_SpecColor("Specular Color", Color) = (0.5, 0.5, 0.5, 0.5)
+		_SpecGlossMap("Specular Map", 2D) = "white" {}
+		[Enum(Specular Alpha,0,Albedo Alpha,1)] _SmoothnessSource("Smoothness Source", Float) = 0.0
+		[ToggleOff] _SpecularHighlights("Specular Highlights", Float) = 1.0
 
-		[HideInInspector]_Smoothness("Smoothness", Range(0.0, 1.0)) = 0.5
-		[HideInInspector]_GlossMapScale("Smoothness Scale", Range(0.0, 1.0)) = 1.0
-		[HideInInspector]_SmoothnessTextureChannel("Smoothness texture channel", Float) = 0
+		[HideInInspector] _BumpScale("Scale", Float) = 1.0
+		[NoScaleOffset] _BumpMap("Normal Map", 2D) = "bump" {}
 
-		[Gamma][HideInInspector] _Metallic("Metallic", Range(0.0, 1.0)) = 0.0
-		[HideInInspector]_MetallicGlossMap("Metallic", 2D) = "white" {}
-
-		[HideInInspector]_SpecColor("Specular", Color) = (0.2, 0.2, 0.2)
-		[HideInInspector]_SpecGlossMap("Specular", 2D) = "white" {}
-
-		[HideInInspector][ToggleOff] _SpecularHighlights("Specular Highlights", Float) = 1.0
-		[HideInInspector][ToggleOff] _EnvironmentReflections("Environment Reflections", Float) = 1.0
-
-		[HideInInspector]_BumpScale("Scale", Float) = 1.0
-		[HideInInspector]_BumpMap("Normal Map", 2D) = "bump" {}
-
-		[HideInInspector]_OcclusionStrength("Strength", Range(0.0, 1.0)) = 1.0
-		[HideInInspector]_OcclusionMap("Occlusion", 2D) = "white" {}
-
-		[HDR][HideInInspector]_EmissionColor("Color", Color) = (0,0,0)
-		[HideInInspector]_EmissionMap("Emission", 2D) = "white" {}
+		_EmissionColor("Emission Color", Color) = (0,0,0)
+		[NoScaleOffset]_EmissionMap("Emission Map", 2D) = "white" {}
 
 		// Blending state
 		[HideInInspector] _Surface("__surface", Float) = 0.0
@@ -54,16 +38,18 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 		[HideInInspector] _ZWrite("__zw", Float) = 1.0
 		[HideInInspector] _Cull("__cull", Float) = 2.0
 
-		[HideInInspector]_ReceiveShadows("Receive Shadows", Float) = 1.0
+		[ToogleOff] _ReceiveShadows("Receive Shadows", Float) = 1.0
+
 		// Editmode props
 		[HideInInspector] _QueueOffset("Queue offset", Float) = 0.0
+		[HideInInspector] _Smoothness("SMoothness", Float) = 0.5
 
 		// ObsoleteProperties
 		[HideInInspector] _MainTex("BaseMap", 2D) = "white" {}
-		[HideInInspector] _Color("Base Color", Color) = (0.5, 0.5, 0.5, 1)
-		[HideInInspector] _GlossMapScale("Smoothness", Float) = 0.0
-		[HideInInspector] _Glossiness("Smoothness", Float) = 0.0
-		[HideInInspector] _GlossyReflections("EnvironmentReflections", Float) = 0.0
+		[HideInInspector] _Color("Base Color", Color) = (1, 1, 1, 1)
+		[HideInInspector] _Shininess("Smoothness", Float) = 0.0
+		[HideInInspector] _GlossinessSource("GlossinessSource", Float) = 0.0
+		[HideInInspector] _SpecSource("SpecularHighlights", Float) = 0.0
 
 	}
 	SubShader 
@@ -82,18 +68,21 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 				"LightMode" = "UniversalForward"
 			}
 			LOD 250
-			
+			// Use same blending / depth states as Standard shader
+			Blend[_SrcBlend][_DstBlend]
+			ZWrite[_ZWrite]
+			Cull[_Cull]
 			// Render State
 			// Blend One Zero, One Zero
-			Cull Back
+			// Cull Back
 			ZTest LEqual
-			ZWrite On
+			// ZWrite On
 			// Lighting Off
 			// ColorMask: <None>
 			
 			
 			HLSLPROGRAM
-			#pragma vertex vert
+			#pragma vertex vert_custom
 			#pragma fragment frag
 
 			
@@ -104,16 +93,30 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 			#pragma multi_compile_fog
 			#pragma multi_compile_instancing
 			#pragma fragmentoption ARB_precision_hint_fastest
+			
+			// -------------------------------------
+			// Material Keywords
+			#pragma shader_feature _ALPHATEST_ON
+			#pragma shader_feature _ALPHAPREMULTIPLY_ON
+			#pragma shader_feature _ _SPECGLOSSMAP _SPECULAR_COLOR
+			#pragma shader_feature _GLOSSINESS_FROM_BASE_ALPHA
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _RECEIVE_SHADOWS_OFF
 
-			// Keywords
-			#pragma multi_compile _ LIGHTMAP_ON
-			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
+			// -------------------------------------
+			// Universal Pipeline keywords
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
-			#pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
+			#pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
 			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
+
+			// -------------------------------------
+			// Unity defined keywords
+			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
+			#pragma multi_compile _ LIGHTMAP_ON
 			
 			// Defines
 			#define _NORMAL_DROPOFF_TS 1
@@ -136,12 +139,13 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/ShaderVariablesFunctions.hlsl"
-			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
 
-			// --------------------------------------------------
-			// Graph
-			
-			// Graph Properties
+			#pragma vertex LitPassVertexSimple
+			#pragma fragment LitPassFragmentSimple
+			#define BUMP_SCALE_NOT_SUPPORTED 1
+
+
 			CBUFFER_START(UnityPerMaterial)
 			float4 _BaseMap_ST;
 			half4 _BaseColor;
@@ -153,422 +157,301 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 			half _BumpScale;
 			half _OcclusionStrength;
 			CBUFFER_END
-			
-			// Graph Functions
-			// GraphFunctions: <None>
-			
-			// Graph Vertex
-			// GraphVertex: <None>
-			
-			// Graph Pixel
-			struct SurfaceDescriptionInputs
+
+			TEXTURE2D(_SpecGlossMap);       SAMPLER(sampler_SpecGlossMap);
+
+			half4 SampleSpecularSmoothness(half2 uv, half alpha, half4 specColor, TEXTURE2D_PARAM(specMap, sampler_specMap))
 			{
-				float3 TangentSpaceNormal;
-			};
-			
-			struct SurfaceDescription
-			{
-				float3 Albedo;
-				float3 Normal;
-				float3 Emission;
-				float Metallic;
-				float Smoothness;
-				float Occlusion;
-				float Alpha;
-				float AlphaClipThreshold;
-			};
-			
-			SurfaceDescription SurfaceDescriptionFunction(SurfaceDescriptionInputs IN)
-			{
-				SurfaceDescription surface = (SurfaceDescription)0;
-				surface.Albedo = IsGammaSpace() ? float3(0.7353569, 0.7353569, 0.7353569) : SRGBToLinear(float3(0.7353569, 0.7353569, 0.7353569));
-				surface.Normal = IN.TangentSpaceNormal;
-				surface.Emission = IsGammaSpace() ? float3(0, 0, 0) : SRGBToLinear(float3(0, 0, 0));
-				surface.Metallic = 0;
-				surface.Smoothness = 0.5;
-				surface.Occlusion = 1;
-				surface.Alpha = 1;
-				surface.AlphaClipThreshold = 0;
-				return surface;
+				half4 specularSmoothness = half4(0.0h, 0.0h, 0.0h, 1.0h);
+				#ifdef _SPECGLOSSMAP
+					specularSmoothness = SAMPLE_TEXTURE2D(specMap, sampler_specMap, uv) * specColor;
+				#elif defined(_SPECULAR_COLOR)
+					specularSmoothness = specColor;
+				#endif
+
+				#ifdef _GLOSSINESS_FROM_BASE_ALPHA
+					specularSmoothness.a = exp2(10 * alpha + 1);
+				#else
+					specularSmoothness.a = exp2(10 * specularSmoothness.a + 1);
+				#endif
+
+				return specularSmoothness;
 			}
-			
-			// --------------------------------------------------
-			// Structs and Packing
-			
-			// Generated Type: Attributes
+
 			struct Attributes
 			{
-				float3 positionOS : POSITION;
-				float3 normalOS : NORMAL;
-				float4 tangentOS : TANGENT;
-				float4 uv1 : TEXCOORD1;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : INSTANCEID_SEMANTIC;
-				#endif
+				float4 positionOS    : POSITION;
+				float3 normalOS      : NORMAL;
+				float4 tangentOS     : TANGENT;
+				float2 texcoord      : TEXCOORD0;
+				float2 lightmapUV    : TEXCOORD1;
+				float4 texcoord2    : TEXCOORD2;
+				float4 color : COLOR;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			// Generated Type: Varyings
+
 			struct Varyings
 			{
-				float4 positionCS : SV_POSITION;
-				float3 positionWS;
-				float3 normalWS;
-				float4 tangentWS;
-				float3 viewDirectionWS;
-				#if defined(LIGHTMAP_ON)
-					float2 lightmapUV;
+				float2 uv                       : TEXCOORD0;
+				DECLARE_LIGHTMAP_OR_SH(lightmapUV, vertexSH, 1);
+
+				float3 posWS                    : TEXCOORD2;    // xyz: posWS
+
+				#ifdef _NORMALMAP
+					float4 normal                   : TEXCOORD3;    // xyz: normal, w: viewDir.x
+					float4 tangent                  : TEXCOORD4;    // xyz: tangent, w: viewDir.y
+					float4 bitangent                : TEXCOORD5;    // xyz: bitangent, w: viewDir.z
+				#else
+					float3  normal                  : TEXCOORD3;
+					float3 viewDir                  : TEXCOORD4;
 				#endif
-				#if !defined(LIGHTMAP_ON)
-					float3 sh;
+
+				half4 fogFactorAndVertexLight   : TEXCOORD6; // x: fogFactor, yzw: vertex light
+
+				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+					float4 shadowCoord              : TEXCOORD7;
 				#endif
-				float4 fogFactorAndVertexLight;
-				float4 shadowCoord;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
+
+				float4 positionCS               : SV_POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+				UNITY_VERTEX_OUTPUT_STEREO
 			};
-			
-			// Generated Type: PackedVaryings
-			struct PackedVaryings
+
+			void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 			{
-				float4 positionCS : SV_POSITION;
-				#if defined(LIGHTMAP_ON)
+				inputData.positionWS = input.posWS;
+
+				#ifdef _NORMALMAP
+					half3 viewDirWS = half3(input.normal.w, input.tangent.w, input.bitangent.w);
+					inputData.normalWS = TransformTangentToWorld(normalTS,
+					half3x3(input.tangent.xyz, input.bitangent.xyz, input.normal.xyz));
+				#else
+					half3 viewDirWS = input.viewDir;
+					inputData.normalWS = input.normal;
 				#endif
-				#if !defined(LIGHTMAP_ON)
+
+				inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
+				viewDirWS = SafeNormalize(viewDirWS);
+
+				inputData.viewDirectionWS = viewDirWS;
+
+				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+					inputData.shadowCoord = input.shadowCoord;
+				#elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
+					inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
+				#else
+					inputData.shadowCoord = float4(0, 0, 0, 0);
 				#endif
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				float3 interp00 : TEXCOORD0;
-				float3 interp01 : TEXCOORD1;
-				float4 interp02 : TEXCOORD2;
-				float3 interp03 : TEXCOORD3;
-				float2 interp04 : TEXCOORD4;
-				float3 interp05 : TEXCOORD5;
-				float4 interp06 : TEXCOORD6;
-				float4 interp07 : TEXCOORD7;
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
-			};
-			
-			// Packed Type: Varyings
-			PackedVaryings PackVaryings(Varyings input)
-			{
-				PackedVaryings output = (PackedVaryings)0;
-				output.positionCS = input.positionCS;
-				output.interp00.xyz = input.positionWS;
-				output.interp01.xyz = input.normalWS;
-				output.interp02.xyzw = input.tangentWS;
-				output.interp03.xyz = input.viewDirectionWS;
-				#if defined(LIGHTMAP_ON)
-					output.interp04.xy = input.lightmapUV;
-				#endif
-				#if !defined(LIGHTMAP_ON)
-					output.interp05.xyz = input.sh;
-				#endif
-				output.interp06.xyzw = input.fogFactorAndVertexLight;
-				output.interp07.xyzw = input.shadowCoord;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
+
+				inputData.fogCoord = input.fogFactorAndVertexLight.x;
+				inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
+				inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS);
 			}
-			
-			// Unpacked Type: Varyings
-			Varyings UnpackVaryings(PackedVaryings input)
+
+			///////////////////////////////////////////////////////////////////////////////
+			//                  Vertex and Fragment functions                            //
+			///////////////////////////////////////////////////////////////////////////////
+			// struct ani_instance_data
+			// {
+				// 	float4 vertex    : POSITION;  // The vertex position in model space.
+				// 	float3 normal    : NORMAL;    // The vertex normal in model space.
+				// 	float2 texcoord  : TEXCOORD0; // The first UV coordinate.
+				// 	float2 texcoord1 : TEXCOORD1; // The second UV coordinate.
+				// 	float4 texcoord2 : TEXCOORD2;
+				// 	float4 tangent   : TANGENT;   // The tangent vector in Model Space (used for normal mapping).
+				// 	float4 color     : COLOR;     // Per-vertex color
+			// };
+
+			// Used in Standard (Simple Lighting) shader
+			Varyings LitPassVertexSimple(Attributes input)
 			{
 				Varyings output = (Varyings)0;
-				output.positionCS = input.positionCS;
-				output.positionWS = input.interp00.xyz;
-				output.normalWS = input.interp01.xyz;
-				output.tangentWS = input.interp02.xyzw;
-				output.viewDirectionWS = input.interp03.xyz;
-				#if defined(LIGHTMAP_ON)
-					output.lightmapUV = input.interp04.xy;
-				#endif
-				#if !defined(LIGHTMAP_ON)
-					output.sh = input.interp05.xyz;
-				#endif
-				output.fogFactorAndVertexLight = input.interp06.xyzw;
-				output.shadowCoord = input.interp07.xyzw;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
-			}
-			
-			// --------------------------------------------------
-			// Build Graph Inputs
-			
-			SurfaceDescriptionInputs BuildSurfaceDescriptionInputs(Varyings input)
-			{
-				SurfaceDescriptionInputs output;
-				ZERO_INITIALIZE(SurfaceDescriptionInputs, output);
-				
-				
-				
-				output.TangentSpaceNormal =          float3(0.0f, 0.0f, 1.0f);
-				
-				
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN output.FaceSign =                    IS_FRONT_VFACE(input.cullFace, true, false);
+
+				UNITY_SETUP_INSTANCE_ID(input);
+				UNITY_TRANSFER_INSTANCE_ID(input, output);
+				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+
+				ani_instance_data aniInstanceData = (ani_instance_data)0;
+				aniInstanceData.vertex = input.positionOS;
+				aniInstanceData.normal = input.normalOS;
+				aniInstanceData.texcoord = input.texcoord;
+				aniInstanceData.texcoord1 = input.lightmapUV;
+				aniInstanceData.texcoord2 = input.texcoord2;
+				aniInstanceData.tangent = input.tangentOS;
+				aniInstanceData.color = input.color;
+
+				vert_Instancing(aniInstanceData);
+
+				VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
+				VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
+				half3 viewDirWS = GetCameraPositionWS() - vertexInput.positionWS;
+				half3 vertexLight = VertexLighting(vertexInput.positionWS, normalInput.normalWS);
+				half fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
+
+				output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+				output.posWS.xyz = vertexInput.positionWS;
+				output.positionCS = vertexInput.positionCS;
+
+				#ifdef _NORMALMAP
+					output.normal = half4(normalInput.normalWS, viewDirWS.x);
+					output.tangent = half4(normalInput.tangentWS, viewDirWS.y);
+					output.bitangent = half4(normalInput.bitangentWS, viewDirWS.z);
 				#else
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
+					output.normal = NormalizeNormalPerVertex(normalInput.normalWS);
+					output.viewDir = viewDirWS;
 				#endif
-				#undef BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
-				
+
+				OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
+				OUTPUT_SH(output.normal.xyz, output.vertexSH);
+
+				output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
+
+				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+					output.shadowCoord = GetShadowCoord(vertexInput);
+				#endif
+
 				return output;
 			}
-			
-			
-			// --------------------------------------------------
-			// Main
-			
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBRForwardPass.hlsl"
-			
+
+			// Used for StandardSimpleLighting shader
+			half4 LitPassFragmentSimple(Varyings input) : SV_Target
+			{
+				UNITY_SETUP_INSTANCE_ID(input);
+				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+				float2 uv = input.uv;
+				half4 diffuseAlpha = SampleAlbedoAlpha(uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
+				half3 diffuse = diffuseAlpha.rgb * _BaseColor.rgb;
+
+				half alpha = diffuseAlpha.a * _BaseColor.a;
+				AlphaDiscard(alpha, _Cutoff);
+				#ifdef _ALPHAPREMULTIPLY_ON
+					diffuse *= alpha;
+				#endif
+
+				half3 normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap));
+				half3 emission = SampleEmission(uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+				half4 specular = SampleSpecularSmoothness(uv, alpha, _SpecColor, TEXTURE2D_ARGS(_SpecGlossMap, sampler_SpecGlossMap));
+				half smoothness = specular.a;
+
+				InputData inputData;
+				InitializeInputData(input, normalTS, inputData);
+
+				half4 color = UniversalFragmentBlinnPhong(inputData, diffuse, specular, smoothness, emission, alpha);
+				color.rgb = MixFog(color.rgb, inputData.fogCoord);
+				return color;
+			};
 			ENDHLSL
 		}
-		//FallBack "Mobile/VertexLit"
-		
 
 		// ShadowCaster
 		Pass
 		{
 			Name "ShadowCaster"
-			Tags 
-			{ 
-				"LightMode" = "ShadowCaster"
-			}
-			
-			// Render State
-			Blend One Zero, One Zero
-			Cull Back
-			ZTest LEqual
+			Tags{"LightMode" = "ShadowCaster"}
+
 			ZWrite On
-			// ColorMask: <None>
-			
-			
+			ZTest LEqual
+			Cull[_Cull]
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			// Debug
-			// <None>
-			
-			// --------------------------------------------------
-			// Pass
-			
-			// Pragmas
+			// Required to compile gles 2.0 with standard srp library
 			#pragma prefer_hlslcc gles
 			#pragma exclude_renderers d3d11_9x
 			#pragma target 2.0
+
+			// -------------------------------------
+			// Material Keywords
+			#pragma shader_feature _ALPHATEST_ON
+			#pragma shader_feature _GLOSSINESS_FROM_BASE_ALPHA
+
+			//--------------------------------------
+			// GPU Instancing
 			#pragma multi_compile_instancing
-			
-			// Keywords
-			// PassKeywords: <None>
-			// GraphKeywords: <None>
-			
-			// Defines
-			#define _NORMAL_DROPOFF_TS 1
-			#define ATTRIBUTES_NEED_NORMAL
-			#define ATTRIBUTES_NEED_TANGENT
-			#define SHADERPASS_SHADOWCASTER
-			
-			// Includes
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+
+			#pragma vertex ShadowPassVertex
+			#pragma fragment ShadowPassFragment
+
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
-			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/ShaderVariablesFunctions.hlsl"
-			
-			// --------------------------------------------------
-			// Graph
-			
-			// Graph Properties
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+
+
 			CBUFFER_START(UnityPerMaterial)
+			float4 _BaseMap_ST;
+			half4 _BaseColor;
+			half4 _SpecColor;
+			half4 _EmissionColor;
+			half _Cutoff;
 			CBUFFER_END
-			
-			// Graph Functions
-			// GraphFunctions: <None>
-			
-			// Graph Vertex
-			// GraphVertex: <None>
-			
-			// Graph Pixel
-			struct SurfaceDescriptionInputs
+
+			float3 _LightDirection;
+			TEXTURE2D(_SpecGlossMap);       SAMPLER(sampler_SpecGlossMap);
+
+			half4 SampleSpecularSmoothness(half2 uv, half alpha, half4 specColor, TEXTURE2D_PARAM(specMap, sampler_specMap))
 			{
-				float3 TangentSpaceNormal;
-			};
-			
-			struct SurfaceDescription
-			{
-				float Alpha;
-				float AlphaClipThreshold;
-			};
-			
-			SurfaceDescription SurfaceDescriptionFunction(SurfaceDescriptionInputs IN)
-			{
-				SurfaceDescription surface = (SurfaceDescription)0;
-				surface.Alpha = 1;
-				surface.AlphaClipThreshold = 0;
-				return surface;
+				half4 specularSmoothness = half4(0.0h, 0.0h, 0.0h, 1.0h);
+				#ifdef _SPECGLOSSMAP
+					specularSmoothness = SAMPLE_TEXTURE2D(specMap, sampler_specMap, uv) * specColor;
+				#elif defined(_SPECULAR_COLOR)
+					specularSmoothness = specColor;
+				#endif
+
+				#ifdef _GLOSSINESS_FROM_BASE_ALPHA
+					specularSmoothness.a = exp2(10 * alpha + 1);
+				#else
+					specularSmoothness.a = exp2(10 * specularSmoothness.a + 1);
+				#endif
+
+				return specularSmoothness;
 			}
-			
-			// --------------------------------------------------
-			// Structs and Packing
-			
-			// Generated Type: Attributes
+
 			struct Attributes
 			{
-				float3 positionOS : POSITION;
-				float3 normalOS : NORMAL;
-				float4 tangentOS : TANGENT;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : INSTANCEID_SEMANTIC;
-				#endif
+				float4 positionOS   : POSITION;
+				float3 normalOS     : NORMAL;
+				float2 texcoord     : TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			// Generated Type: Varyings
+
 			struct Varyings
 			{
-				float4 positionCS : SV_POSITION;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
+				float2 uv           : TEXCOORD0;
+				float4 positionCS   : SV_POSITION;
 			};
-			
-			// Generated Type: PackedVaryings
-			struct PackedVaryings
+
+			float4 GetShadowPositionHClip(Attributes input)
 			{
-				float4 positionCS : SV_POSITION;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
-			};
-			
-			// Packed Type: Varyings
-			PackedVaryings PackVaryings(Varyings input)
-			{
-				PackedVaryings output = (PackedVaryings)0;
-				output.positionCS = input.positionCS;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
-			}
-			
-			// Unpacked Type: Varyings
-			Varyings UnpackVaryings(PackedVaryings input)
-			{
-				Varyings output = (Varyings)0;
-				output.positionCS = input.positionCS;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
-			}
-			
-			// --------------------------------------------------
-			// Build Graph Inputs
-			
-			SurfaceDescriptionInputs BuildSurfaceDescriptionInputs(Varyings input)
-			{
-				SurfaceDescriptionInputs output;
-				ZERO_INITIALIZE(SurfaceDescriptionInputs, output);
-				
-				
-				
-				output.TangentSpaceNormal = float3(0.0f, 0.0f, 1.0f);
-				
-				
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN output.FaceSign = IS_FRONT_VFACE(input.cullFace, true, false);
+				float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+				float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+
+				float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+
+				#if UNITY_REVERSED_Z
+					positionCS.z = min(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
 				#else
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
+					positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
 				#endif
-				#undef BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
-				
+
+				return positionCS;
+			}
+
+			Varyings ShadowPassVertex(Attributes input)
+			{
+				Varyings output;
+				UNITY_SETUP_INSTANCE_ID(input);
+
+				output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+				output.positionCS = GetShadowPositionHClip(input);
 				return output;
 			}
-			
-			
-			// --------------------------------------------------
-			// Main
-			
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShadowCasterPass.hlsl"
-			
+
+			half4 ShadowPassFragment(Varyings input) : SV_TARGET
+			{
+				Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
+				return 0;
+			}
+
 			ENDHLSL
 		}
 		
@@ -576,205 +459,94 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 		Pass
 		{
 			Name "DepthOnly"
-			Tags 
-			{ 
-				"LightMode" = "DepthOnly"
-			}
-			
-			// Render State
-			Blend One Zero, One Zero
-			Cull Back
-			ZTest LEqual
+			Tags{"LightMode" = "DepthOnly"}
+
 			ZWrite On
 			ColorMask 0
-			
-			
+			Cull[_Cull]
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			// Debug
-			// <None>
-			
-			// --------------------------------------------------
-			// Pass
-			
-			// Pragmas
+			// Required to compile gles 2.0 with standard srp library
 			#pragma prefer_hlslcc gles
 			#pragma exclude_renderers d3d11_9x
 			#pragma target 2.0
+
+			#pragma vertex DepthOnlyVertex
+			#pragma fragment DepthOnlyFragment
+
+			// -------------------------------------
+			// Material Keywords
+			#pragma shader_feature _ALPHATEST_ON
+			#pragma shader_feature _GLOSSINESS_FROM_BASE_ALPHA
+
+			//--------------------------------------
+			// GPU Instancing
 			#pragma multi_compile_instancing
-			
-			// Keywords
-			// PassKeywords: <None>
-			// GraphKeywords: <None>
-			
-			// Defines
-			#define _NORMAL_DROPOFF_TS 1
-			#define ATTRIBUTES_NEED_NORMAL
-			#define ATTRIBUTES_NEED_TANGENT
-			#define SHADERPASS_DEPTHONLY
-			
-			// Includes
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
-			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/ShaderVariablesFunctions.hlsl"
-			
-			// --------------------------------------------------
-			// Graph
-			
-			// Graph Properties
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
+
 			CBUFFER_START(UnityPerMaterial)
+			float4 _BaseMap_ST;
+			half4 _BaseColor;
+			half4 _SpecColor;
+			half4 _EmissionColor;
+			half _Cutoff;
 			CBUFFER_END
-			
-			// Graph Functions
-			// GraphFunctions: <None>
-			
-			// Graph Vertex
-			// GraphVertex: <None>
-			
-			// Graph Pixel
-			struct SurfaceDescriptionInputs
+
+			TEXTURE2D(_SpecGlossMap);       SAMPLER(sampler_SpecGlossMap);
+
+			half4 SampleSpecularSmoothness(half2 uv, half alpha, half4 specColor, TEXTURE2D_PARAM(specMap, sampler_specMap))
 			{
-				float3 TangentSpaceNormal;
-			};
-			
-			struct SurfaceDescription
-			{
-				float Alpha;
-				float AlphaClipThreshold;
-			};
-			
-			SurfaceDescription SurfaceDescriptionFunction(SurfaceDescriptionInputs IN)
-			{
-				SurfaceDescription surface = (SurfaceDescription)0;
-				surface.Alpha = 1;
-				surface.AlphaClipThreshold = 0;
-				return surface;
+				half4 specularSmoothness = half4(0.0h, 0.0h, 0.0h, 1.0h);
+				#ifdef _SPECGLOSSMAP
+					specularSmoothness = SAMPLE_TEXTURE2D(specMap, sampler_specMap, uv) * specColor;
+				#elif defined(_SPECULAR_COLOR)
+					specularSmoothness = specColor;
+				#endif
+
+				#ifdef _GLOSSINESS_FROM_BASE_ALPHA
+					specularSmoothness.a = exp2(10 * alpha + 1);
+				#else
+					specularSmoothness.a = exp2(10 * specularSmoothness.a + 1);
+				#endif
+
+				return specularSmoothness;
 			}
-			
-			// --------------------------------------------------
-			// Structs and Packing
-			
-			// Generated Type: Attributes
+
 			struct Attributes
 			{
-				float3 positionOS : POSITION;
-				float3 normalOS : NORMAL;
-				float4 tangentOS : TANGENT;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : INSTANCEID_SEMANTIC;
-				#endif
+				float4 position     : POSITION;
+				float2 texcoord     : TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			// Generated Type: Varyings
+
 			struct Varyings
 			{
-				float4 positionCS : SV_POSITION;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
+				float2 uv           : TEXCOORD0;
+				float4 positionCS   : SV_POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+				UNITY_VERTEX_OUTPUT_STEREO
 			};
-			
-			// Generated Type: PackedVaryings
-			struct PackedVaryings
-			{
-				float4 positionCS : SV_POSITION;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
-			};
-			
-			// Packed Type: Varyings
-			PackedVaryings PackVaryings(Varyings input)
-			{
-				PackedVaryings output = (PackedVaryings)0;
-				output.positionCS = input.positionCS;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
-			}
-			
-			// Unpacked Type: Varyings
-			Varyings UnpackVaryings(PackedVaryings input)
+
+			Varyings DepthOnlyVertex(Attributes input)
 			{
 				Varyings output = (Varyings)0;
-				output.positionCS = input.positionCS;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
+				UNITY_SETUP_INSTANCE_ID(input);
+				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+
+				output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+				output.positionCS = TransformObjectToHClip(input.position.xyz);
 				return output;
 			}
-			
-			// --------------------------------------------------
-			// Build Graph Inputs
-			
-			SurfaceDescriptionInputs BuildSurfaceDescriptionInputs(Varyings input)
+
+			half4 DepthOnlyFragment(Varyings input) : SV_TARGET
 			{
-				SurfaceDescriptionInputs output;
-				ZERO_INITIALIZE(SurfaceDescriptionInputs, output);
-				
-				
-				
-				output.TangentSpaceNormal =          float3(0.0f, 0.0f, 1.0f);
-				
-				
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN output.FaceSign =                    IS_FRONT_VFACE(input.cullFace, true, false);
-				#else
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
-				#endif
-				#undef BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
-				
-				return output;
+				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+				Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
+				return 0;
 			}
-			
-			
-			// --------------------------------------------------
-			// Main
-			
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthOnlyPass.hlsl"
-			
 			ENDHLSL
 		}
 		
@@ -782,213 +554,24 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 		Pass
 		{
 			Name "Meta"
-			Tags 
-			{ 
-				"LightMode" = "Meta"
-			}
-			
-			// Render State
-			Blend One Zero, One Zero
-			Cull Back
-			ZTest LEqual
-			ZWrite On
-			// ColorMask: <None>
-			
-			
+			Tags{ "LightMode" = "Meta" }
+
+			Cull Off
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			// Debug
-			// <None>
-			
-			// --------------------------------------------------
-			// Pass
-			
-			// Pragmas
+			// Required to compile gles 2.0 with standard srp library
 			#pragma prefer_hlslcc gles
 			#pragma exclude_renderers d3d11_9x
-			#pragma target 2.0
-			
-			// Keywords
-			#pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
-			// GraphKeywords: <None>
-			
-			// Defines
-			#define _NORMAL_DROPOFF_TS 1
-			#define ATTRIBUTES_NEED_NORMAL
-			#define ATTRIBUTES_NEED_TANGENT
-			#define ATTRIBUTES_NEED_TEXCOORD1
-			#define ATTRIBUTES_NEED_TEXCOORD2
-			#define SHADERPASS_META
-			
-			// Includes
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
-			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/ShaderVariablesFunctions.hlsl"
-			
-			// --------------------------------------------------
-			// Graph
-			
-			// Graph Properties
-			CBUFFER_START(UnityPerMaterial)
-			CBUFFER_END
-			
-			// Graph Functions
-			// GraphFunctions: <None>
-			
-			// Graph Vertex
-			// GraphVertex: <None>
-			
-			// Graph Pixel
-			struct SurfaceDescriptionInputs
-			{
-				float3 TangentSpaceNormal;
-			};
-			
-			struct SurfaceDescription
-			{
-				float3 Albedo;
-				float3 Emission;
-				float Alpha;
-				float AlphaClipThreshold;
-			};
-			
-			SurfaceDescription SurfaceDescriptionFunction(SurfaceDescriptionInputs IN)
-			{
-				SurfaceDescription surface = (SurfaceDescription)0;
-				surface.Albedo = IsGammaSpace() ? float3(0.7353569, 0.7353569, 0.7353569) : SRGBToLinear(float3(0.7353569, 0.7353569, 0.7353569));
-				surface.Emission = IsGammaSpace() ? float3(0, 0, 0) : SRGBToLinear(float3(0, 0, 0));
-				surface.Alpha = 1;
-				surface.AlphaClipThreshold = 0;
-				return surface;
-			}
-			
-			// --------------------------------------------------
-			// Structs and Packing
-			
-			// Generated Type: Attributes
-			struct Attributes
-			{
-				float3 positionOS : POSITION;
-				float3 normalOS : NORMAL;
-				float4 tangentOS : TANGENT;
-				float4 uv1 : TEXCOORD1;
-				float4 uv2 : TEXCOORD2;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : INSTANCEID_SEMANTIC;
-				#endif
-			};
-			
-			// Generated Type: Varyings
-			struct Varyings
-			{
-				float4 positionCS : SV_POSITION;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
-			};
-			
-			// Generated Type: PackedVaryings
-			struct PackedVaryings
-			{
-				float4 positionCS : SV_POSITION;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					uint instanceID : CUSTOM_INSTANCE_ID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					uint stereoTargetEyeIndexAsRTArrayIdx : SV_RenderTargetArrayIndex;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					uint stereoTargetEyeIndexAsBlendIdx0 : BLENDINDICES0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					FRONT_FACE_TYPE cullFace : FRONT_FACE_SEMANTIC;
-				#endif
-			};
-			
-			// Packed Type: Varyings
-			PackedVaryings PackVaryings(Varyings input)
-			{
-				PackedVaryings output = (PackedVaryings)0;
-				output.positionCS = input.positionCS;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
-			}
-			
-			// Unpacked Type: Varyings
-			Varyings UnpackVaryings(PackedVaryings input)
-			{
-				Varyings output = (Varyings)0;
-				output.positionCS = input.positionCS;
-				#if UNITY_ANY_INSTANCING_ENABLED
-					output.instanceID = input.instanceID;
-				#endif
-				#if (defined(UNITY_STEREO_INSTANCING_ENABLED))
-					output.stereoTargetEyeIndexAsRTArrayIdx = input.stereoTargetEyeIndexAsRTArrayIdx;
-				#endif
-				#if (defined(UNITY_STEREO_MULTIVIEW_ENABLED)) || (defined(UNITY_STEREO_INSTANCING_ENABLED) && (defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)))
-					output.stereoTargetEyeIndexAsBlendIdx0 = input.stereoTargetEyeIndexAsBlendIdx0;
-				#endif
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					output.cullFace = input.cullFace;
-				#endif
-				return output;
-			}
-			
-			// --------------------------------------------------
-			// Build Graph Inputs
-			
-			SurfaceDescriptionInputs BuildSurfaceDescriptionInputs(Varyings input)
-			{
-				SurfaceDescriptionInputs output;
-				ZERO_INITIALIZE(SurfaceDescriptionInputs, output);
-				
-				
-				
-				output.TangentSpaceNormal =          float3(0.0f, 0.0f, 1.0f);
-				
-				
-				#if defined(SHADER_STAGE_FRAGMENT) && defined(VARYINGS_NEED_CULLFACE)
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN output.FaceSign =                    IS_FRONT_VFACE(input.cullFace, true, false);
-				#else
-					#define BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
-				#endif
-				#undef BUILD_SURFACE_DESCRIPTION_INPUTS_OUTPUT_FACESIGN
-				
-				return output;
-			}
-			
-			
-			// --------------------------------------------------
-			// Main
-			
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/LightingMetaPass.hlsl"
-			
+
+			#pragma vertex UniversalVertexMeta
+			#pragma fragment UniversalFragmentMetaSimple
+
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _SPECGLOSSMAP
+
+			#include "Packages/com.unity.render-pipelines.universal/Shaders/SimpleLitInput.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/Shaders/SimpleLitMetaPass.hlsl"
+
 			ENDHLSL
 		}
 	}

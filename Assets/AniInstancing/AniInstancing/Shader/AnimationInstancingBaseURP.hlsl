@@ -77,8 +77,8 @@
 	{
 		float4 vertex    : POSITION;  // The vertex position in model space.
 		float3 normal    : NORMAL;    // The vertex normal in model space.
-		float4 texcoord  : TEXCOORD0; // The first UV coordinate.
-		float4 texcoord1 : TEXCOORD1; // The second UV coordinate.
+		float2 texcoord  : TEXCOORD0; // The first UV coordinate.
+		float2 texcoord1 : TEXCOORD1; // The second UV coordinate.
 		float4 texcoord2 : TEXCOORD2;
 		float4 tangent   : TANGENT;   // The tangent vector in Model Space (used for normal mapping).
 		float4 color     : COLOR;     // Per-vertex color
