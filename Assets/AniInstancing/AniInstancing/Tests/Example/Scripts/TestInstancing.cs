@@ -22,7 +22,7 @@ namespace AnimationInstancing
 
         void LoadAB()
         {
-            AnimationManager.GetInstance().LoadAnimationAssetBundle(Application.streamingAssetsPath + "/AssetBundle/animationtexture");
+            // AnimationManager.GetInstance().LoadAnimationAssetBundle(Application.streamingAssetsPath + "/AssetBundle/animationtexture");
         }
 
         // Use this for initialization

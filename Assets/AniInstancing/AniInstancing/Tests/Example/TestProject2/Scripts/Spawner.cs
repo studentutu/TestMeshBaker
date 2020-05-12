@@ -43,7 +43,7 @@ public class Spawner : MonoBehaviour
 
     void LoadAB()
     {
-        AnimationInstancing.AnimationManager.Instance.LoadAnimationAssetBundle(Application.streamingAssetsPath + "/AssetBundle/animationtexture");
+        // AnimationInstancing.AnimationManager.Instance.LoadAnimationAssetBundle(Application.streamingAssetsPath + "/AssetBundle/animationtexture");
     }
 
 

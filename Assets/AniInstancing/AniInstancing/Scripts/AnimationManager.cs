@@ -42,6 +42,7 @@ namespace AnimationInstancing
         {
             m_animationInfo = new Dictionary<GameObject, InstanceAnimationInfo>();
             m_requestList = new List<CreateAnimationRequest>();
+            MainAsset = currentAssetToRead;
         }
 
         private void Update()
@@ -71,17 +72,12 @@ namespace AnimationInstancing
             request.instance = instance;
             if (MainAsset != null)
             {
-                LoadAnimationInfoFromAssetBundle(request);
+                info = LoadAnimationInfoFromAssetBundle(request);
             }
             return info;
         }
 
-        public void LoadAnimationAssetBundle(string path)
-        {
-            MainAsset = currentAssetToRead;
-        }
-
-        private void LoadAnimationInfoFromAssetBundle(CreateAnimationRequest request)
+        private InstanceAnimationInfo LoadAnimationInfoFromAssetBundle(CreateAnimationRequest request)
         {
             Debug.Assert(MainAsset);
             // Resources.Load("AnimationClips/" + request.prefab.name);
@@ -105,6 +101,7 @@ namespace AnimationInstancing
                 request.instance.Prepare(info.listAniInfo, info.extraBoneInfo);
                 m_animationInfo.Add(request.prefab, info);
             }
+            return info;
         }
 
         private List<AnimationInfo> ReadAnimationInfo(BinaryReader reader)

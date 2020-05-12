@@ -20,7 +20,7 @@ namespace AnimationInstancing
         [NonSerialized]
         public Transform worldTransform;
         //public GameObject prefab { get; set; }
-		public GameObject prototype;
+        public GameObject prototype;
         public BoundingSphere boundingSpere;
         public bool visible { get; set; }
         public AnimationInstancing parentInstance { get; set; }
@@ -33,8 +33,8 @@ namespace AnimationInstancing
         WrapMode wrapMode;
         public WrapMode Mode
         {
-             get {return wrapMode;}
-             set {wrapMode = value;}
+            get { return wrapMode; }
+            set { wrapMode = value; }
         }
         public bool IsLoop() { return Mode == WrapMode.Loop; }
         public bool IsPause() { return speedParameter == 0.0f; }
@@ -86,12 +86,6 @@ namespace AnimationInstancing
 
         void Start()
         {
-            if (!AnimationInstancingMgr.Instance.UseInstancing)
-            {
-                gameObject.SetActive(false);
-                return;
-            }
-
             worldTransform = GetComponent<Transform>();
             animator = GetComponent<Animator>();
             boundingSpere = new BoundingSphere(new Vector3(0, 0, 0), 1.0f);
@@ -101,7 +95,7 @@ namespace AnimationInstancing
             switch (QualitySettings.skinWeights)
             {
                 case SkinWeights.TwoBones:
-                    bonePerVertex = bonePerVertex > 2?2: bonePerVertex;
+                    bonePerVertex = bonePerVertex > 2 ? 2 : bonePerVertex;
                     break;
                 case SkinWeights.OneBone:
                     bonePerVertex = 1;
@@ -222,18 +216,18 @@ namespace AnimationInstancing
 
         public bool InitializeAnimation()
         {
-			if(prototype == null) 
-			{
-				Debug.LogError("The prototype is NULL. Please select the prototype first.");
-			}
-			Debug.Assert(prototype != null);
-			GameObject thisPrefab = prototype;
+            if (prototype == null)
+            {
+                Debug.LogError("The prototype is NULL. Please select the prototype first.");
+            }
+            Debug.Assert(prototype != null);
+            GameObject thisPrefab = prototype;
             isMeshRender = false;
             if (lodInfo[0].skinnedMeshRenderer.Length == 0)
             {
                 // This is only a MeshRenderer, it has no animations.
                 isMeshRender = true;
-				AnimationInstancingMgr.Instance.AddMeshVertex(prototype.name,
+                AnimationInstancingMgr.Instance.AddMeshVertex(prototype.name,
                     lodInfo,
                     null,
                     null,
@@ -241,7 +235,7 @@ namespace AnimationInstancing
                 return true;
             }
 
-			AnimationManager.InstanceAnimationInfo info = AnimationManager.Instance.FindAnimationInfo(prototype, this);
+            AnimationManager.InstanceAnimationInfo info = AnimationManager.Instance.FindAnimationInfo(prototype, this);
             if (info != null)
             {
                 aniInfo = info.listAniInfo;
@@ -264,7 +258,7 @@ namespace AnimationInstancing
             if (extraBoneInfo != null)
             {
                 List<Transform> list = new List<Transform>();
-                list.AddRange(bones);                
+                list.AddRange(bones);
                 Transform[] transforms = gameObject.GetComponentsInChildren<Transform>();
                 for (int i = 0; i != extraBoneInfo.extraBone.Length; ++i)
                 {
@@ -279,9 +273,9 @@ namespace AnimationInstancing
                 }
                 allTransforms = list.ToArray();
             }
-            
 
-			AnimationInstancingMgr.Instance.AddMeshVertex(prototype.name,
+
+            AnimationInstancingMgr.Instance.AddMeshVertex(prototype.name,
                 lodInfo,
                 allTransforms,
                 bindPose,
@@ -460,36 +454,36 @@ namespace AnimationInstancing
             switch (wrapMode)
             {
                 case WrapMode.Loop:
-                {
-                    if (curFrame < 0f)
-                        curFrame += (totalFrame - 1);
-                    else if (curFrame > totalFrame - 1)
-                        curFrame -= (totalFrame - 1);
-                    break;
-                }
+                    {
+                        if (curFrame < 0f)
+                            curFrame += (totalFrame - 1);
+                        else if (curFrame > totalFrame - 1)
+                            curFrame -= (totalFrame - 1);
+                        break;
+                    }
                 case WrapMode.PingPong:
-                {
-                    if (curFrame < 0f)
                     {
-                        speedParameter = Mathf.Abs(speedParameter);
-                        curFrame = Mathf.Abs(curFrame);
+                        if (curFrame < 0f)
+                        {
+                            speedParameter = Mathf.Abs(speedParameter);
+                            curFrame = Mathf.Abs(curFrame);
+                        }
+                        else if (curFrame > totalFrame - 1)
+                        {
+                            speedParameter = -Mathf.Abs(speedParameter);
+                            curFrame = 2 * (totalFrame - 1) - curFrame;
+                        }
+                        break;
                     }
-                    else if (curFrame > totalFrame - 1)
-                    {
-                        speedParameter = -Mathf.Abs(speedParameter);
-                        curFrame = 2 * (totalFrame - 1) - curFrame;
-                    }
-                    break;
-                }
                 case WrapMode.Default:
                 case WrapMode.Once:
-                {
-                    if (curFrame < 0f || curFrame > totalFrame - 1.0f)
                     {
-                        Pause();
+                        if (curFrame < 0f || curFrame > totalFrame - 1.0f)
+                        {
+                            Pause();
+                        }
+                        break;
                     }
-                    break;
-                }
             }
 
             curFrame = Mathf.Clamp(curFrame, 0f, totalFrame - 1);
@@ -530,7 +524,7 @@ namespace AnimationInstancing
             if (aniEvent == null)
             {
                 float time = curFrame / info.fps;
-                for (int i = eventIndex >= 0? eventIndex: 0; i < info.eventList.Count; ++i)
+                for (int i = eventIndex >= 0 ? eventIndex : 0; i < info.eventList.Count; ++i)
                 {
                     if (info.eventList[i].time > time)
                     {
@@ -587,14 +581,14 @@ namespace AnimationInstancing
             attachment.parentInstance = this;
             AnimationInstancingMgr.VertexCache parentCache = AnimationInstancingMgr.Instance.FindVertexCache(lodInfo[0].skinnedMeshRenderer[0].name.GetHashCode());
             listAttachment.Add(attachment);
-            
+
             int nameCode = boneName.GetHashCode();
-            nameCode += attachment.lodInfo[0].meshRenderer.Length > 0? attachment.lodInfo[0].meshRenderer[0].name.GetHashCode(): 0;
+            nameCode += attachment.lodInfo[0].meshRenderer.Length > 0 ? attachment.lodInfo[0].meshRenderer[0].name.GetHashCode() : 0;
             if (attachment.lodInfo[0].meshRenderer.Length == 0)
             {
                 //todo, to support the attachment that has skinnedMeshRenderer;
                 int skinnedMeshRenderCount = attachment.lodInfo[0].skinnedMeshRenderer.Length;
-                nameCode += skinnedMeshRenderCount > 0? attachment.lodInfo[0].skinnedMeshRenderer[0].name.GetHashCode(): 0;
+                nameCode += skinnedMeshRenderCount > 0 ? attachment.lodInfo[0].skinnedMeshRenderer[0].name.GetHashCode() : 0;
             }
             AnimationInstancingMgr.VertexCache cache = AnimationInstancingMgr.Instance.FindVertexCache(nameCode);
             // if we can reuse the VertexCache, we don't need to create one
@@ -604,7 +598,7 @@ namespace AnimationInstancing
                 return;
             }
 
-			AnimationInstancingMgr.Instance.AddMeshVertex(attachment.prototype.name,
+            AnimationInstancingMgr.Instance.AddMeshVertex(attachment.prototype.name,
                         attachment.lodInfo,
                         null,
                         null,
@@ -643,7 +637,7 @@ namespace AnimationInstancing
 
         public int GetAnimationCount()
         {
-            return aniInfo != null? aniInfo.Count: 0;
+            return aniInfo != null ? aniInfo.Count : 0;
         }
 
         private void RefreshAttachmentAnimation(int index)
