@@ -279,6 +279,7 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 				aniInstanceData.color = input.color;
 
 				vert_Instancing(aniInstanceData);
+				input.positionOS = aniInstanceData.vertex;
 
 				VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 				VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
