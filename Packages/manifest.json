@@ -69,10 +69,6 @@
     "com.greenbuttongames.morpeh.hypercasual.sdk.dotween": {
       "revision": "master",
       "hash": "9d085005b3c922c5b4f78c5b23332fa64a7574a9"
-    },
-    "com.xcrew.morpeh": {
-      "revision": "develop",
-      "hash": "9d9ee705b6018a9e047b75b637d1d722857e484e"
     }
   }
 }
