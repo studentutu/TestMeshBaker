@@ -9,13 +9,13 @@ namespace AnimationInstancing.ShaderGui
     internal class LitShader : BaseShaderGUI
     {
         // Properties
-        private LitGUI.LitProperties litProperties;
+        private SimpleLitGUI.SimpleLitProperties shadingModelProperties;
 
         // collect properties from the material properties
         public override void FindProperties(MaterialProperty[] properties)
         {
             base.FindProperties(properties);
-            litProperties = new LitGUI.LitProperties(properties);
+            shadingModelProperties = new SimpleLitGUI.SimpleLitProperties(properties);
         }
 
         // material changed check
@@ -24,7 +24,7 @@ namespace AnimationInstancing.ShaderGui
             if (material == null)
                 throw new ArgumentNullException("material");
 
-            SetMaterialKeywords(material, LitGUI.SetMaterialKeywords);
+            SetMaterialKeywords(material, SimpleLitGUI.SetMaterialKeywords);
         }
 
         // material main surface options
@@ -38,41 +38,28 @@ namespace AnimationInstancing.ShaderGui
 
             // Detect any changes to the material
             EditorGUI.BeginChangeCheck();
-            if (litProperties.workflowMode != null)
             {
-                DoPopup(LitGUI.Styles.workflowModeText, litProperties.workflowMode, Enum.GetNames(typeof(LitGUI.WorkflowMode)));
+                base.DrawSurfaceOptions(material);
             }
             if (EditorGUI.EndChangeCheck())
             {
                 foreach (var obj in blendModeProp.targets)
                     MaterialChanged((Material)obj);
             }
-            base.DrawSurfaceOptions(material);
         }
 
         // material main surface inputs
         public override void DrawSurfaceInputs(Material material)
         {
             base.DrawSurfaceInputs(material);
-            LitGUI.Inputs(litProperties, materialEditor, material);
+            SimpleLitGUI.Inputs(shadingModelProperties, materialEditor, material);
             DrawEmissionProperties(material, true);
             DrawTileOffset(materialEditor, baseMapProp);
         }
 
-        // material main advanced options
         public override void DrawAdvancedOptions(Material material)
         {
-            if (litProperties.reflections != null && litProperties.highlights != null)
-            {
-                EditorGUI.BeginChangeCheck();
-                materialEditor.ShaderProperty(litProperties.highlights, LitGUI.Styles.highlightsText);
-                materialEditor.ShaderProperty(litProperties.reflections, LitGUI.Styles.reflectionsText);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    MaterialChanged(material);
-                }
-            }
-
+            SimpleLitGUI.Advanced(shadingModelProperties);
             base.DrawAdvancedOptions(material);
             materialEditor.RenderQueueField();
         }
@@ -113,21 +100,6 @@ namespace AnimationInstancing.ShaderGui
             }
             material.SetFloat("_Surface", (float)surfaceType);
             material.SetFloat("_Blend", (float)blendMode);
-
-            if (oldShader.name.Equals("Standard (Specular setup)"))
-            {
-                material.SetFloat("_WorkflowMode", (float)LitGUI.WorkflowMode.Specular);
-                Texture texture = material.GetTexture("_SpecGlossMap");
-                if (texture != null)
-                    material.SetTexture("_MetallicSpecGlossMap", texture);
-            }
-            else
-            {
-                material.SetFloat("_WorkflowMode", (float)LitGUI.WorkflowMode.Metallic);
-                Texture texture = material.GetTexture("_MetallicGlossMap");
-                if (texture != null)
-                    material.SetTexture("_MetallicSpecGlossMap", texture);
-            }
 
             MaterialChanged(material);
         }
