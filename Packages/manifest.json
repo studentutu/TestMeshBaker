@@ -62,13 +62,17 @@
     }
   ],
   "lock": {
+    "com.greenbuttongames.morpeh.hypercasual.sdk.dotween": {
+      "revision": "master",
+      "hash": "9d085005b3c922c5b4f78c5b23332fa64a7574a9"
+    },
     "com.greenbuttongames.morpeh.hypercasual.sdk.odin": {
       "revision": "master",
       "hash": "975149edfa2a8fe0c9cc43a64426b43791683dce"
     },
-    "com.greenbuttongames.morpeh.hypercasual.sdk.dotween": {
-      "revision": "master",
-      "hash": "9d085005b3c922c5b4f78c5b23332fa64a7574a9"
+    "com.xcrew.morpeh": {
+      "revision": "develop",
+      "hash": "56c72cc6835e83f88ef1fc9d020ec7b97904f785"
     }
   }
 }
