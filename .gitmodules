@@ -1,0 +1,4 @@
+[submodule "Assets/MorpehBaker"]
+	path = Assets/MorpehBaker
+	url = https://github.com/X-Crew/Morpeh.Baker
+	branch = develop
