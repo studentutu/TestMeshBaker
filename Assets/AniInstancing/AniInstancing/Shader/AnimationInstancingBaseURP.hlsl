@@ -11,19 +11,16 @@
 	int _boneTextureWidth;
 	int _boneTextureHeight;
 
-	#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-		uniform float frameIndex;
-		uniform float preFrameIndex;
-		uniform float transitionProgress;
-	#else
-		UNITY_INSTANCING_BUFFER_START(Props)
+	#ifdef UNITY_INSTANCING_ENABLED
+		UNITY_INSTANCING_CBUFFER_START(Props)
 		UNITY_DEFINE_INSTANCED_PROP(float, preFrameIndex)
-		#define preFrameIndex_arr Props
 		UNITY_DEFINE_INSTANCED_PROP(float, frameIndex)
-		#define frameIndex_arr Props
 		UNITY_DEFINE_INSTANCED_PROP(float, transitionProgress)
-		#define transitionProgress_arr Props
 		UNITY_INSTANCING_BUFFER_END(Props)
+
+		#define frameIndex_arr Props
+		#define preFrameIndex_arr Props
+		#define transitionProgress_arr Props
 	#endif
 
 	half4x4 loadMatFromTexture(uint frameIndex, uint boneIndex)
@@ -88,14 +85,14 @@
 	{
 		half4 w = v.color;
 		half4 bone = half4(v.texcoord2.x, v.texcoord2.y, v.texcoord2.z, v.texcoord2.w);
-		#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-			float curFrame = frameIndex;
-			float preAniFrame = preFrameIndex;
-			float progress = transitionProgress;
-		#else
-			float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
-			float preAniFrame = UNITY_ACCESS_INSTANCED_PROP(preFrameIndex_arr, preFrameIndex);
-			float progress = UNITY_ACCESS_INSTANCED_PROP(transitionProgress_arr, transitionProgress);
+		float curFrame = 0;
+		float preAniFrame = 0;
+		float progress = 0;
+		
+		#ifdef UNITY_INSTANCING_ENABLED
+			curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
+			preAniFrame = UNITY_ACCESS_INSTANCED_PROP(preFrameIndex_arr, preFrameIndex);
+			progress = UNITY_ACCESS_INSTANCED_PROP(transitionProgress_arr, transitionProgress);
 		#endif
 
 		//float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex);
@@ -131,14 +128,14 @@
 	half4 skinningShadow(inout ani_instance_data v)
 	{
 		half4 bone = half4(v.texcoord2.x, v.texcoord2.y, v.texcoord2.z, v.texcoord2.w);
-		#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-			float curFrame = frameIndex;
-			float preAniFrame = preFrameIndex;
-			float progress = transitionProgress;
-		#else
-			float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
-			float preAniFrame = UNITY_ACCESS_INSTANCED_PROP(preFrameIndex_arr, preFrameIndex);
-			float progress = UNITY_ACCESS_INSTANCED_PROP(transitionProgress_arr, transitionProgress);
+		
+		float curFrame = 0;
+		float preAniFrame = 0;
+		float progress = 0;
+		#ifdef UNITY_INSTANCING_ENABLED
+			curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
+			preAniFrame = UNITY_ACCESS_INSTANCED_PROP(preFrameIndex_arr, preFrameIndex);
+			progress = UNITY_ACCESS_INSTANCED_PROP(transitionProgress_arr, transitionProgress);
 		#endif
 		int preFrame = curFrame;
 		int nextFrame = curFrame + 1.0f;

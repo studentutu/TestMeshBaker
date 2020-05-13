@@ -50,6 +50,7 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 		[HideInInspector] _Shininess("Smoothness", Float) = 0.0
 		[HideInInspector] _GlossinessSource("GlossinessSource", Float) = 0.0
 		[HideInInspector] _SpecSource("SpecularHighlights", Float) = 0.0
+		[HideInInspektor] _Metallic (" Metalic value", Range(0.0, 1.0)) = 0.5
 
 	}
 	SubShader 
@@ -82,9 +83,6 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 			
 			
 			HLSLPROGRAM
-			#pragma vertex vert_custom
-			#pragma fragment frag
-
 			
 			// Pragmas
 			#pragma prefer_hlslcc gles
@@ -129,6 +127,7 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 			#define VARYINGS_NEED_VIEWDIRECTION_WS
 			#define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
 			#define SHADERPASS_FORWARD
+			#define BUMP_SCALE_NOT_SUPPORTED 1
 			//DECLARE_VERTEX_SKINNING
 
 			// Includes
@@ -143,7 +142,6 @@ Shader "AnimationInstancing/Mobile URP Bumped Specular_instancing"
 
 			#pragma vertex LitPassVertexSimple
 			#pragma fragment LitPassFragmentSimple
-			#define BUMP_SCALE_NOT_SUPPORTED 1
 
 
 			CBUFFER_START(UnityPerMaterial)
