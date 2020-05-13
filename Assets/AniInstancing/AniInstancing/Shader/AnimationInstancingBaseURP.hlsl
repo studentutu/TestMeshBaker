@@ -6,10 +6,10 @@
 	//#pragma target 3.0
 
 	sampler2D _boneTexture;
-	int _boneTextureBlockWidth;
-	int _boneTextureBlockHeight;
-	int _boneTextureWidth;
-	int _boneTextureHeight;
+	uint _boneTextureBlockWidth;
+	uint _boneTextureBlockHeight;
+	uint _boneTextureWidth;
+	uint _boneTextureHeight;
 
 	#ifdef UNITY_INSTANCING_ENABLED
 		UNITY_INSTANCING_CBUFFER_START(Props)
