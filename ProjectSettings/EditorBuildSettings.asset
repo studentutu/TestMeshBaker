@@ -8,9 +8,6 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/MorpehBaker/Tests/App/Scenes/TestScene1.unity
     guid: a64566e394d702646bbd6ebd8a7e65e7
-  - enabled: 0
-    path: Assets/MorpehBaker/Tests/App/Scenes/TestScene2.unity
-    guid: dd4ee6524edc3614e9e7bba6d7cd7b5e
   - enabled: 1
     path: Assets/MorpehBaker/Tests/Scene/Benchmark1.unity
     guid: 74fef5299922137409a52c628ebeb31e
