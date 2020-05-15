@@ -10,6 +10,7 @@ public class Instancetest : MonoBehaviour
     private Matrix4x4[] workingMatrixes = null;
     private bool UseInstancing;
 
+    [SerializeField] private UnityEngine.UI.Text text = null;
     // Update is called once per frame
 
     private void Awake()
@@ -18,7 +19,15 @@ public class Instancetest : MonoBehaviour
         {
             UseInstancing = false;
         }
+        if (text != null)
+        {
+            text.text = "DT :" + SystemInfo.graphicsDeviceType +
+                        " Instancing " + SystemInfo.supportsInstancing +
+                        " computeBuffer " + SystemInfo.maxComputeBufferInputsVertex +
+                        " supportsSetConstantBuffer " + SystemInfo.supportsSetConstantBuffer;
+        }
     }
+
     void Update()
     {
         if (workingMatrixes == null)
