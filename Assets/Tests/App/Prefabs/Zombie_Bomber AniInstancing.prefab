@@ -1059,8 +1059,7 @@ GameObject:
   - component: {fileID: 7371572770307862933}
   - component: {fileID: 4215072247110985337}
   - component: {fileID: 6713732345327765007}
-  - component: {fileID: 4810787309523004025}
-  - component: {fileID: 2743166546639150431}
+  - component: {fileID: 2690808078986769601}
   m_Layer: 0
   m_Name: Zombie_Bomber AniInstancing
   m_TagString: Untagged
@@ -1116,7 +1115,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.65, y: 1.6, z: 0.62547654}
   m_Center: {x: 0, y: 0.75, z: 0.16273843}
---- !u!114 &4810787309523004025
+--- !u!114 &2690808078986769601
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1125,63 +1124,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 7863616526923667942}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbe0ac4c13bb8db478bbeb469ffc0986, type: 3}
+  m_Script: {fileID: 11500000, guid: 2f47bf4169ec5dd4cbf530cf6929eeab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serializedData:
-    isInitialized: 0
-    worldMatrix:
-      e00: 0
-      e01: 0
-      e02: 0
-      e03: 0
-      e10: 0
-      e11: 0
-      e12: 0
-      e13: 0
-      e20: 0
-      e21: 0
-      e22: 0
-      e23: 0
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 0
-    prototype: {fileID: 7863616526923667942}
-    animationData: {fileID: 4900000, guid: a43193edbcda86e40ac983d4d3038230, type: 3}
-    playSpeed: 0
-    shadowCastingMode: 0
-    receiveShadow: 0
-    layer: 0
-    speedParameter: 0
-    wrapMode: 0
-    bonePerVertex: 0
-    curFrame: 0
-    preAniFrame: 0
-    aniIndex: 0
-    preAniIndex: 0
-    aniTextureIndex: 0
-    transitionDuration: 0
-    isInTransition: 0
-    transitionTimer: 0
-    transitionProgress: 0
-    aniInfo: []
-    lodInfo: []
-    allTransforms: []
---- !u!114 &2743166546639150431
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7863616526923667942}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e13fa16a38038c84796ec1b94bafa322, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  serializedData:
-    root: {fileID: 7863616526923667942}
+  prototype: {fileID: 7863616526923667942}
+  playSpeed: 1
+  shadowCastingMode: 0
+  receiveShadow: 0
+  applyRootMotion: 0
+  bonePerVertex: 2
 --- !u!1 &7863646811927248566
 GameObject:
   m_ObjectHideFlags: 0

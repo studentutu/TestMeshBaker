@@ -15,6 +15,7 @@ public class ActivateNumber : MonoBehaviour
         slider.onValueChanged.AddListener(ChangeNumber);
         // ChangeNumber(300);
         slider.value = startFrom;
+        var isSupported = SystemInfo.supportsInstancing;
     }
 
     private void ChangeNumber(float value)
