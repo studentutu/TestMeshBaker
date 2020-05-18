@@ -30101,12 +30101,12 @@ MonoBehaviour:
   m_criticalFpsColor: {r: 0.8627451, g: 0.16078432, b: 0.11764706, a: 1}
   m_fpsGraphResolution: 150
   m_fpsTextUpdateRate: 2
-  m_ramModuleState: 4
+  m_ramModuleState: 0
   m_allocatedRamColor: {r: 1, g: 0.74509805, b: 0.23529412, a: 1}
   m_reservedRamColor: {r: 0.8039216, g: 0.32941177, b: 0.8980392, a: 1}
   m_monoRamColor: {r: 0.3, g: 0.65, b: 1, a: 1}
-  m_ramGraphResolution: 150
-  m_ramTextUpdateRate: 3
+  m_ramGraphResolution: 128
+  m_ramTextUpdateRate: 2
   m_audioModuleState: 4
   m_findAudioListenerInCameraIfNull: 1
   m_audioListener: {fileID: 0}
