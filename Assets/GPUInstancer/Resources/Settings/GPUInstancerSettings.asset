@@ -23,7 +23,7 @@ MonoBehaviour:
   isLWRP: 0
   isURP: 1
   isShaderGraphPresent: 0
-  instancingBoundsSize: 10000
+  instancingBoundsSize: 4000
   MAX_DETAIL_DISTANCE: 2500
   MAX_TREE_DISTANCE: 2500
   MAX_PREFAB_DISTANCE: 10000
@@ -35,7 +35,7 @@ MonoBehaviour:
   disableInstanceCountWarning: 0
   disableAutoShaderConversion: 0
   disableAutoVariantHandling: 0
-  testBothEyesForVROcclusion: 1
+  testBothEyesForVROcclusion: 0
   vrRenderingMode: 0
   extensionSettings: []
   renderingSettingPresets:

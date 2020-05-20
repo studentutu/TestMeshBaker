@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [CreateAssetMenu(fileName = "Scenes", menuName = "Test/Scenes", order = 1)]
 public class ScenesContainer : ScriptableObject
@@ -30,6 +31,12 @@ public class ScenesContainer : ScriptableObject
                 UnityEngine.Resources.UnloadAsset(allLoadedResourcesObjects[i]);
             }
             allLoadedResourcesObjects = null;
+            instance.allScenes = instance.CalculateScenes();
         }
+    }
+
+    private int CalculateScenes()
+    {
+        return SceneManager.sceneCountInBuildSettings;
     }
 }
