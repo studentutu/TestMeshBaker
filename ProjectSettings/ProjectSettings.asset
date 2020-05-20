@@ -677,7 +677,7 @@ PlayerSettings:
   webGLWasmStreaming: 0
   scriptingDefineSymbols:
     1: MORPEH;ODIN_INSPECTOR;ODIN_VALIDATOR
-    7: ODIN_INSPECTOR;ODIN_VALIDATOR;MORPEH
+    7: ODIN_INSPECTOR;ODIN_VALIDATOR;MORPEH;GPU_INSTANCER
   platformArchitecture: {}
   scriptingBackend:
     Android: 1
