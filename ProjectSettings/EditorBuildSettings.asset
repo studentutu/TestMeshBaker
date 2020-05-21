@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Tests/Scene/Benchmark4.unity
     guid: 379e2840a7d76334c85f7d6a54dc6c0b
   - enabled: 1
-    path: Assets/GPUInstancer/Demos/AddRemoveInstances/AddRemoveInstancesDemo.unity
-    guid: 869500333ae6b8e40a13e56be864b21e
+    path: Assets/Tests/Scene/Benchmark5.unity
+    guid: 4fe039151a5379b4fbd40928aaad812a
+  - enabled: 1
+    path: Assets/Tests/Scene/Benchmark6.unity
+    guid: 72482910fd2e336429df754d7a66546a
   m_configObjects: {}

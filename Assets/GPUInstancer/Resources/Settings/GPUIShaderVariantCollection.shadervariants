@@ -13,6 +13,9 @@ ShaderVariantCollection:
       variants:
       - keywords: 
         passType: 0
+      - keywords: _ENVIRONMENTREFLECTIONS_OFF _GLOSSYREFLECTIONS_OFF _RECEIVE_SHADOWS_OFF
+          _SPECULARHIGHLIGHTS_OFF
+        passType: 0
   - first: {fileID: 4800000, guid: b1a05ad601a72334d8529afd35a4e2c8, type: 3}
     second:
       variants:
